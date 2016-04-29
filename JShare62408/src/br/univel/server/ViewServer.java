@@ -361,7 +361,7 @@ public class ViewServer extends JFrame implements Server{
 
 			mostrar("Retornando erro para tentativa de nome duplicado: " + nome);
 
-			throw new RemoteException("AlguÃ©m jÃ¡ estÃ¡ usando o nome: " + nome);
+			throw new RemoteException("Alguém já está usando o nome: " + nome);
 		}
 
 		mapaClientes.put(nome, cliente);

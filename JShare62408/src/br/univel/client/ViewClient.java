@@ -5,8 +5,11 @@ import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -22,6 +25,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JSplitPane;
 import javax.swing.JScrollPane;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -36,7 +40,23 @@ public class ViewClient extends JFrame implements Client {
 	private JButton buttonConectar;
 	private JLabel lblNome;
 	private JTextField txfMeuNome;
-	private JButton buttonEnviar;
+	private Registry registry;
+	private JTabbedPane tabbedPane;
+	private JPanel panel;
+	private JPanel panel_2;
+	private JPanel panel_3;
+	private JSplitPane splitPane;
+	private JScrollPane scrollPane;
+	private JList list;
+	private JScrollPane scrollPane_1;
+	private JList list_1;
+	private JButton btnDownload;
+	private JPanel panel_4;
+	private JButton btnNewButton;
+	private JButton btnNewButton_1;
+	private JButton btnNewButton_2;
+	private JTable table;
+	private String meunome;
 
 	/**
 	 * Launch the application.
@@ -161,8 +181,8 @@ public class ViewClient extends JFrame implements Client {
 		panel_3 = new JPanel();
 		panel_2.add(panel_3, BorderLayout.SOUTH);
 		
-		btnDownlod = new JButton("Downlod");
-		panel_3.add(btnDownlod);
+		btnDownload = new JButton("Download");
+		panel_3.add(btnDownload);
 		
 		
 		splitPane = new JSplitPane();
@@ -206,8 +226,19 @@ public class ViewClient extends JFrame implements Client {
 		
 	}
 	protected void configurar() {
-		// TODO Auto-generated method stub
-		
+		buttonConectar.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				conectar();
+			}
+		});
+
+		buttonDesconectar.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+			//	desconectar();
+			}
+		});
 	}
 
 	
@@ -223,22 +254,7 @@ public class ViewClient extends JFrame implements Client {
 	 * Registo onde o objeto exportado será buscado pelo nome. É o registro que
 	 * escuta na porta TCP/IP, aberto no servidor.
 	 */
-	private Registry registry;
-	private JTabbedPane tabbedPane;
-	private JPanel panel;
-	private JPanel panel_2;
-	private JPanel panel_3;
-	private JSplitPane splitPane;
-	private JScrollPane scrollPane;
-	private JList list;
-	private JScrollPane scrollPane_1;
-	private JList list_1;
-	private JButton btnDownlod;
-	private JPanel panel_4;
-	private JButton btnNewButton;
-	private JButton btnNewButton_1;
-	private JButton btnNewButton_2;
-	private JTable table;
+
 
 	@Override
 	public void listaClients(List<String> lista) throws RemoteException {
@@ -252,7 +268,57 @@ public class ViewClient extends JFrame implements Client {
 		
 	}
 
+	protected void conectar() {
 
+		meunome = txfMeuNome.getText().trim();
+		if (meunome.length() == 0) {
+			JOptionPane.showMessageDialog(this, "Você precisa digitar um nome!");
+			return;
+		}
+
+		// Endereço IP
+		String host = txfIp.getText().trim();
+		if (!host.matches("[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}")) {
+			JOptionPane.showMessageDialog(this, "O endereço ip parece inválido!");
+			return;
+		}
+
+		// Porta
+		String strPorta = txfPorta.getText().trim();
+		if (!strPorta.matches("[0-9]+") || strPorta.length() > 5) {
+			JOptionPane.showMessageDialog(this, "A porta deve ser um valor numérico de no máximo 5 dígitos!");
+			return;
+		}
+		int intPorta = Integer.parseInt(strPorta);
+
+		// Iniciando objetos para conexão.
+		try {
+			registry = LocateRegistry.getRegistry(host, intPorta);
+
+			server = (Server) registry.lookup(Server.NOME);
+			client = (Client) UnicastRemoteObject.exportObject(this, 0);
+
+			// Avisando o servidor que está entrando no Chat.
+			server.loginTorrent(meunome, client);
+
+			buttonDesconectar.setEnabled(true);
+
+			buttonConectar.setEnabled(false);
+			txfMeuNome.setEnabled(false);
+			txfIp.setEnabled(false);
+			txfPorta.setEnabled(false);
+
+			buttonConectar.setEnabled(false);
+			btnDownload.setEnabled(true);
+		//	txfMensagem.setEnabled(true);
+
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (NotBoundException e) {
+			e.printStackTrace();
+		}
+
+	}
 
 
 
